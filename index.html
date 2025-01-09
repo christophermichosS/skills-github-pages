@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERT Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PERT Calculator</h1>
+        <div class="form-group">
+            <label for="optimistic">Optimistic Estimate (O):</label>
+            <input type="number" id="optimistic" placeholder="Enter the optimistic estimate">
+        </div>
+        <div class="form-group">
+            <label for="mostLikely">Most Likely Estimate (M):</label>
+            <input type="number" id="mostLikely" placeholder="Enter the most likely estimate">
+        </div>
+        <div class="form-group">
+            <label for="pessimistic">Pessimistic Estimate (P):</label>
+            <input type="number" id="pessimistic" placeholder="Enter the pessimistic estimate">
+        </div>
+        <div class="form-group">
+            <label for="confidence">Confidence Level (in %):</label>
+            <input type="number" id="confidence" placeholder="Enter the confidence level (e.g., 80)">
+        </div>
+        <button onclick="calculatePERT()">Calculate</button>
+        <div id="results" class="results" style="display: none;">
+            <h2>Results</h2>
+            <p><strong>Expected Estimate (E):</strong> <span id="expected"></span></p>
+            <p><strong>Standard Deviation (σ):</strong> <span id="stdDev"></span></p>
+            <p><strong>Confidence Interval:</strong> <span id="confidenceInterval"></span></p>
+            <p><strong>Confidence Level (%):</strong> <span id="confidenceLevel"></span></p>
+            <p><strong>Estimation:</strong> <span id="finalEstimation"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Map confidence level to Z-score
+        function getZScore(confidence) {
+            const zScores = {
+                80: 1.28,
+                90: 1.645,
+                95: 1.96,
+                99: 2.576
+            };
+            return zScores[confidence] || null;
+        }
+
+        function calculatePERT() {
+            // Get inputs
+            const optimistic = parseFloat(document.getElementById("optimistic").value);
+            const mostLikely = parseFloat(document.getElementById("mostLikely").value);
+            const pessimistic = parseFloat(document.getElementById("pessimistic").value);
+            const confidence = parseFloat(document.getElementById("confidence").value);
+
+            // Validate inputs
+            if (isNaN(optimistic) || isNaN(mostLikely) || isNaN(pessimistic) || isNaN(confidence)) {
+                alert("Please enter valid numbers in all fields.");
+                return;
+            }
+
+            // Calculate PERT metrics
+            const expected = (optimistic + 4 * mostLikely + pessimistic) / 6;
+            const stdDev = (pessimistic - optimistic) / 6;
+
+            // Get Z-score for confidence level
+            const z = getZScore(confidence);
+            if (!z) {
+                alert("Unsupported confidence level. Please use 80, 90, 95, or 99.");
+                return;
+            }
+
+            // Calculate confidence interval
+            const lowerBound = expected - (z * stdDev);
+            const upperBound = expected + (z * stdDev);
+
+            // Calculate final estimation as the average of lower and upper bounds
+            const finalEstimation = (lowerBound + upperBound) / 2;
+
+            // Display results
+            document.getElementById("expected").textContent = expected.toFixed(2);
+            document.getElementById("stdDev").textContent = stdDev.toFixed(2);
+            document.getElementById("confidenceInterval").textContent = `${lowerBound.toFixed(2)} to ${upperBound.toFixed(2)}`;
+            document.getElementById("confidenceLevel").textContent = `${confidence}%`;
+            document.getElementById("finalEstimation").textContent = finalEstimation.toFixed(2);
+
+            document.getElementById("results").style.display = "block";
+        }
+    </script>
+</body>
+</html>
